@@ -1,4 +1,4 @@
-use ::cyclic_pipe::cyclic_pipe::builder::Builder;
+use ::cyclic_pipe;
 use std::thread;
 
 #[test]
@@ -6,7 +6,7 @@ fn example() {
     let frame_size = 1000;
     let num_frames = 1000;
 
-    let (p, c) = Builder::<Vec<f32>>::new()
+    let (p, c) = cyclic_pipe::Builder::<Vec<f32>>::new()
         .with_size(2)
         .with_init_template(vec![std::f32::NAN; frame_size])
         .build();
