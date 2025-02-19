@@ -42,15 +42,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_done_sends_value() {
+    fn done_sends_value() {
         let (tx, rx) = mpsc::channel();
         let token = Token::new("hello", tx);
+        assert!(rx.try_recv().is_err(), "token is not done yet");
         token.done();
-        assert_eq!(rx.try_recv().unwrap(), "hello");
+        assert_eq!(rx.recv().unwrap(), "hello");
     }
 
     #[test]
-    fn test_token_drop_without_done() {
+    fn token_drop_without_done() {
         use super::Token;
         use std::sync::mpsc;
 
@@ -61,20 +62,24 @@ mod tests {
             // token is dropped here without calling done()
         }
 
-        // The channel has no senders left, so recv() will return an error.
-        assert!(rx.recv().is_err());
+        assert!(
+            rx.recv().is_err(),
+            "The channel has no senders left, so recv() will return an error."
+        );
     }
 
     #[test]
-    fn test_token_cannot_be_used_after_done() {
+    fn token_cannot_be_used_after_done() {
         let (tx, rx) = mpsc::channel();
         let token = Token::new("hello", tx);
         token.done();
         // Attempting to use token after done() should result in a compile-time error
-        // token.done(); // Uncommenting this line should cause a compile-time error
-        assert_eq!(rx.try_recv().unwrap(), "hello");
+        // println!("{}", token.buf()); // Uncommenting this line should cause a compile-time error
+        assert_eq!(rx.recv().unwrap(), "hello");
 
-        // The channel has no senders left, so recv() will return an error.
-        assert!(rx.recv().is_err());
+        assert!(
+            rx.recv().is_err(),
+            "The channel has no senders left, so recv() directly return an error."
+        );
     }
 }

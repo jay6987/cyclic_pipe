@@ -54,7 +54,10 @@ fn producer_disconnected() {
 
     drop(p);
 
-    assert!(c.get_read_token().is_err());
+    assert!(
+        c.get_read_token().is_err(),
+        "producer is disconnected, no data to read"
+    );
 }
 
 #[test]
@@ -70,12 +73,18 @@ fn consumer_disconnected() {
     // consumer is disconnected here.
     drop(c);
 
-    assert!(wt.buf.len() == 1000);
+    assert!(
+        wt.buf.len() == 1000,
+        "since the write token is got before consumer disconneted, the buffer be still useable"
+    );
 
     wt.done();
 
     // the 2nd write token should NOT be ok to get
-    assert!(p.get_write_token().is_err());
+    assert!(
+        p.get_write_token().is_err(),
+        "consumer is disconnected, no buffer to write"
+    );
 }
 
 #[test]
@@ -92,13 +101,17 @@ fn procuder_disconnected() {
     // producer is disconnected here.
     drop(p);
 
-    // the 1st read token should be able to get since the 1st write token is done.
     let rt = c.get_read_token().unwrap();
-    assert!(rt.buf == "hello");
+    assert!(
+        rt.buf == "hello",
+        "the 1st read token should be able to get since the 1st write token is done."
+    );
     rt.done();
 
-    // the 2nd read token should NOT be ok to get.
-    assert!(c.get_read_token().is_err())
+    assert!(
+        c.get_read_token().is_err(),
+        "the 2nd read token should NOT be ok to get."
+    )
 }
 
 #[test]
@@ -118,11 +131,17 @@ fn buffer_orderring() {
     wt1.done();
 
     let rt1 = c.get_read_token().unwrap();
-    assert!(rt1.buf == "hello");
+    assert!(
+        rt1.buf == "hello",
+        "the 1st read token should be the 1st-GOT write token"
+    );
     rt1.done();
 
     let rt2 = c.get_read_token().unwrap();
-    assert!(rt2.buf == "world");
+    assert!(
+        rt2.buf == "world",
+        "the 2nd read token should be the 2nd-GOT write token"
+    );
     rt2.done();
 }
 
@@ -164,7 +183,10 @@ fn consumer_blocked_until_producer_write_done() {
 
     sleep(std::time::Duration::from_millis(10));
 
-    assert!(!handle.is_finished());
+    assert!(
+        !handle.is_finished(),
+        "read token is blocked since write token is not done yet"
+    );
 
     wt.done();
     let _ = handle.join();
@@ -190,9 +212,10 @@ fn producer_blocked_until_consumer_read_done() {
     sleep(std::time::Duration::from_millis(10));
 
     let rt = c.get_read_token().unwrap();
-    assert!(rt.buf == "hello");
+    assert!(rt.buf == "hello", "the 1st read token is OK to read");
 
-    assert!(!handle.is_finished());
+    assert!(!handle.is_finished(),
+     "write token is blocked since read token is not done yet so there is no empty buffer to write.");
 
     rt.done();
 
@@ -208,8 +231,10 @@ fn token_drop_without_done_cause_error() {
 
     {
         let _wt = p.get_write_token().unwrap();
-        // write token drop here without calling done().
     }
 
-    assert!(c.get_read_token().is_err());
+    assert!(
+        c.get_read_token().is_err(),
+        "the read token should be error since the write token is dropped without done."
+    );
 }
