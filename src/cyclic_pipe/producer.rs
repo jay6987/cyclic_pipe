@@ -1,6 +1,7 @@
 use super::token::Token;
 use std::sync::mpsc;
 
+/// A producer end of a cyclic pipe.
 pub struct Producer<T>
 where
     T: Clone,
@@ -30,6 +31,8 @@ where
         }
     }
 
+    /// Wait for a write token to access the buffer.
+    /// Will be blocked until a buffer is available.
     pub fn get_write_token(&self) -> Result<Token<T>, mpsc::RecvError> {
         match self.inner.rx_empty.recv() {
             Ok(buf_recv) => Ok(match buf_recv.recv() {

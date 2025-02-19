@@ -1,6 +1,7 @@
 use super::token::Token;
 use std::sync::mpsc;
 
+/// A consumer end of a cyclic pipe.
 pub struct Consumer<T>
 where
     T: Clone,
@@ -30,6 +31,8 @@ where
         }
     }
 
+    /// Wait for a read token to access the buffer.
+    /// Will be blocked until a buffer is written.
     pub fn get_read_token(&self) -> Result<Token<T>, mpsc::RecvError> {
         match self.inner.rx_full.recv() {
             Ok(buf_recv) => Ok(match buf_recv.recv() {

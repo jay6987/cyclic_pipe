@@ -1,9 +1,11 @@
 use std::sync::mpsc::{self, SendError};
 
+/// A token to access the buffer.
 pub struct Token<T>
 where
     T: Clone,
 {
+    /// The buffer from the cyclic pipe to be accessed.
     pub buf: T,
     inner: TokenInner<T>,
 }
@@ -26,6 +28,10 @@ where
         }
     }
 
+    /// Return the buffer to the cyclic pipe.
+    /// This method must be called after the buffer is finished being accessed.
+    /// If this method is not called before the token is dropped, the other end
+    /// of the cyclic pipe will get an error when trying to get a token.
     pub fn done(self) {
         match self.inner.sender.send(self.buf) {
             Ok(_) => (),
@@ -52,7 +58,6 @@ mod tests {
 
     #[test]
     fn token_drop_without_done() {
-        use super::Token;
         use std::sync::mpsc;
 
         let (tx, rx) = mpsc::channel();
