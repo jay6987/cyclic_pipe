@@ -37,7 +37,7 @@ where
                     let (tx, rx) = mpsc::channel::<T>();
                     match self.inner.tx_empty.send(rx) {
                         Ok(_) => Token::new(buf, tx),
-                        Err(_) => return Err(mpsc::RecvError),
+                        Err(_) => Token::new(buf, tx),
                     }
                 }
                 Err(e) => return Err(e),

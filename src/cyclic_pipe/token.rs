@@ -1,4 +1,4 @@
-use std::sync::mpsc;
+use std::sync::mpsc::{self, SendError};
 
 pub struct Token<T>
 where
@@ -27,7 +27,12 @@ where
     }
 
     pub fn done(self) {
-        self.inner.sender.send(self.buf).unwrap();
+        match self.inner.sender.send(self.buf) {
+            Ok(_) => (),
+            Err(SendError(_)) => (),
+            // FIXME: should retrun error for write token
+            //        while ignore error for read token
+        };
     }
 }
 
