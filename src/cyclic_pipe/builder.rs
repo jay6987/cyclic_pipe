@@ -43,8 +43,8 @@ where
             tx_empty.send(rx).unwrap();
             tx.send(self.init_template.unwrap()).unwrap();
         }
-        let producer = Producer { rx_empty, tx_full };
-        let consumer = Consumer { rx_full, tx_empty };
+        let producer = Producer::new(rx_empty, tx_full);
+        let consumer = Consumer::new(rx_full, tx_empty);
         (producer, consumer)
     }
 }

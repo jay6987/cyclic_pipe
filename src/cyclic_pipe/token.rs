@@ -5,15 +5,29 @@ where
     T: Clone,
 {
     pub buf: T,
-    pub(crate) sender: mpsc::Sender<T>,
+    inner: TokenInner<T>,
+}
+
+struct TokenInner<T>
+where
+    T: Clone,
+{
+    sender: mpsc::Sender<T>,
 }
 
 impl<T> Token<T>
 where
     T: Clone,
 {
+    pub(crate) fn new(buf: T, sender: mpsc::Sender<T>) -> Self {
+        Token {
+            buf,
+            inner: TokenInner { sender },
+        }
+    }
+
     pub fn done(self) {
-        self.sender.send(self.buf).unwrap();
+        self.inner.sender.send(self.buf).unwrap();
     }
 }
 
@@ -25,33 +39,10 @@ mod tests {
     #[test]
     fn test_done_sends_value() {
         let (tx, rx) = mpsc::channel();
-        let token = Token {
-            buf: "hello",
-            sender: tx,
-        };
+        let token = Token::new("hello", tx);
         token.done();
         assert_eq!(rx.try_recv().unwrap(), "hello");
     }
-
-    // This doc test is compile-fail to ensure the token cannot be used after done() is called.
-    //
-    // It verifies that attempting to use a Token after calling done() does not compile.
-    //
-    // ```compile_fail
-    // use std::sync::mpsc;
-    // use cyclic_pipe::token::Token;
-    //
-    // let (tx, _rx) = mpsc::channel();
-    // let token = Token {
-    //     buf: "test",
-    //     sender: tx,
-    // };
-    // token.done();
-    // // Attempting to call done() a second time is a compile error because token has been moved.
-    // token.done();
-    // ```
-    //
-    // Note: Replace `cyclic_pipe::token::Token` with the appropriate module path if needed.
 
     #[test]
     fn test_token_drop_without_done() {
@@ -61,12 +52,22 @@ mod tests {
         let (tx, rx) = mpsc::channel();
 
         {
-            let _token = Token {
-                buf: "hello",
-                sender: tx,
-            };
+            let _token = Token::new("hello", tx);
             // token is dropped here without calling done()
         }
+
+        // The channel has no senders left, so recv() will return an error.
+        assert!(rx.recv().is_err());
+    }
+
+    #[test]
+    fn test_token_cannot_be_used_after_done() {
+        let (tx, rx) = mpsc::channel();
+        let token = Token::new("hello", tx);
+        token.done();
+        // Attempting to use token after done() should result in a compile-time error
+        // token.done(); // Uncommenting this line should cause a compile-time error
+        assert_eq!(rx.try_recv().unwrap(), "hello");
 
         // The channel has no senders left, so recv() will return an error.
         assert!(rx.recv().is_err());

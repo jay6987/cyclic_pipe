@@ -20,8 +20,8 @@ fn example() {
             // since writting and pushing are done in spawn threads,
             // the finishing order is not guaranteed.
             handles_writing.push(thread::spawn(move || {
-                token.buf[0] = i as f32; 
-                token.done(); 
+                token.buf[0] = i as f32;
+                token.done();
             }));
         }
         for handle in handles_writing {
