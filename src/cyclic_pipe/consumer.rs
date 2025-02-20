@@ -38,10 +38,10 @@ where
             Ok(buf_recv) => Ok(match buf_recv.recv() {
                 Ok(buf) => {
                     let (tx, rx) = mpsc::channel::<T>();
-                    match self.inner.tx_empty.send(rx) {
-                        Ok(_) => Token::new(buf, tx),
-                        Err(_) => Token::new(buf, tx),
-                    }
+                    // consumer does not necessarily need to send back the buffer
+                    // so ignore the error
+                    let _ = self.inner.tx_empty.send(rx);
+                    Token::new(buf, tx)
                 }
                 Err(e) => return Err(e),
             }),

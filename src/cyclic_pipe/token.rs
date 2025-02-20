@@ -1,4 +1,4 @@
-use std::sync::mpsc::{self, SendError};
+use std::sync::mpsc;
 
 /// A token to access the buffer.
 pub struct Token<T>
@@ -32,13 +32,13 @@ where
     /// This method must be called after the buffer is finished being accessed.
     /// If this method is not called before the token is dropped, the other end
     /// of the cyclic pipe will get an error when trying to get a token.
+    ///
+    /// The reason why this method is designed to be called explicitly in stead of
+    /// automatically when the token is dropped is to let the consumer know whether
+    /// the buffer is really done or not (i.e. the producer just crushes and the buffer
+    /// is not really done yet).
     pub fn done(self) {
-        match self.inner.sender.send(self.buf) {
-            Ok(_) => (),
-            Err(SendError(_)) => (),
-            // FIXME: should retrun error for write token
-            //        while ignore error for read token
-        };
+        let _ = self.inner.sender.send(self.buf);
     }
 }
 
