@@ -1,6 +1,7 @@
 //! # Cyclic Pipe
 //!
-//! `cyclic_pipe` is a Rust library that provides fixed-size, buffer pre-allocated cyclic pipes.
+//! `cyclic_pipe` is a Rust library that provides fixed-size, buffer pre-allocated cyclic pipes
+//! which supports multi-producer and multi-consumer concurrent access.
 //!
 //! This crate is designed to facilitate efficient and synchronized data transfer between
 //! different parts of a program, using a cyclic buffer to manage the data flow.

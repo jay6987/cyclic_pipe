@@ -37,17 +37,17 @@ where
     /// automatically when the token is dropped is to let the consumer know whether
     /// the buffer is really done or not (i.e. the producer just crushes and the buffer
     /// is not really done yet).
-    /// 
+    ///
     /// Since done() already consumes the token, the Drop trait is not implemented for Token.
-    /// 
+    ///
     /// # Compile Fail
     ///
     /// a Token cannot be used after it is done.
-    /// 
+    ///
     /// ```compile_fail
     /// use cyclic_pipe::Builder;
     /// use std::sync::mpsc;
-    /// 
+    ///
     /// let (p, _c) = Builder::new()
     ///     .with_init_template("hello".to_string())
     ///     .with_size(1)
@@ -66,7 +66,6 @@ where
 mod tests {
 
     use super::*;
-
 
     #[test]
     fn done_sends_value() {

@@ -2,5 +2,10 @@
 name = "cyclic_pipe"
 version = "0.1.0"
 edition = "2021"
+authors = ["jay <jay6987@hotmail.com>"]
+keywords = ["pipeline","async","cycle"]
+categories = ["asynchronous", "concurrency"]
+license = "Apache-2.0 OR MIT"
+description = "A library providing fixed-size, buffer pre-allocated cyclic pipe which support multi-producer and multi-consumer concurrent access."
 
 [dependencies]
