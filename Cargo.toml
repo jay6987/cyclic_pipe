@@ -7,5 +7,6 @@ keywords = ["pipeline","async","cycle"]
 categories = ["asynchronous", "concurrency"]
 license = "Apache-2.0 OR MIT"
 description = "A library providing fixed-size, buffer pre-allocated cyclic pipe which support multi-producer and multi-consumer concurrent access."
+repository = "https://github.com/jay6987/cyclic_pipe"
 
 [dependencies]
