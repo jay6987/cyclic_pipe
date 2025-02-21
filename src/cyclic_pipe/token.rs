@@ -38,6 +38,8 @@ where
     /// the buffer is really done or not (i.e. the producer just crushes and the buffer
     /// is not really done yet).
     /// 
+    /// Since done() already consumes the token, the Drop trait is not implemented for Token.
+    /// 
     /// # Compile Fail
     ///
     /// a Token cannot be used after it is done.
