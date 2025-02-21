@@ -68,18 +68,66 @@ where
     pub fn build(self) -> (Producer<T>, Consumer<T>) {
         let (tx_empty, rx_empty) = mpsc::channel::<std::sync::mpsc::Receiver<T>>();
         let (tx_full, rx_full) = mpsc::channel::<std::sync::mpsc::Receiver<T>>();
-        for _i in 0..(self.size - 1) {
+        match self.init_template{
+            None => panic!("init_template is not set"),
+            Some(template) => {
+          for _i in 0..(self.size - 1) {
             let (tx, rx) = mpsc::channel::<T>();
             tx_empty.send(rx).unwrap();
-            tx.send(self.init_template.clone().unwrap()).unwrap();
+            tx.send(template.clone()).unwrap();
         }
         {
             let (tx, rx) = mpsc::channel::<T>();
             tx_empty.send(rx).unwrap();
-            tx.send(self.init_template.unwrap()).unwrap();
+            tx.send(template).unwrap();
         }
         let producer = Producer::new(rx_empty, tx_full);
         let consumer = Consumer::new(rx_full, tx_empty);
-        (producer, consumer)
+        (producer, consumer)              
+            }
+        }
     }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn builder_build_with_init_template() {
+        let builder = Builder::new()
+            .with_size(2)
+            .with_init_template(vec![0; 1000]);
+        let (_p, _c) = builder.build();
+    }
+
+    #[test]
+    #[should_panic(expected = "init_template is not set")]
+    fn builder_build_without_init_template() {
+        let builder = Builder::<Vec<i32>>::new().with_size(2);
+        let _ = builder.build();
+    }
+
+    #[test]
+    fn builder_build_size() {
+        let pipe_size = 10;
+        let builder = Builder::new()
+            .with_size(10)
+            .with_init_template(vec![0; 1000]);
+        let (p, c) = builder.build();
+        let mut concurent_write_tokens = Vec::with_capacity(pipe_size);
+        let mut concurent_read_tokens = Vec::with_capacity(pipe_size);
+        for _i in 0..pipe_size{
+            concurent_write_tokens.push(p.get_write_token().unwrap());
+        }
+        for wt in concurent_write_tokens{
+            wt.done();
+            concurent_read_tokens.push(c.get_read_token().unwrap());
+        }
+        for rt in concurent_read_tokens{
+            rt.done();
+        }
+    }
+
 }

@@ -37,6 +37,24 @@ where
     /// automatically when the token is dropped is to let the consumer know whether
     /// the buffer is really done or not (i.e. the producer just crushes and the buffer
     /// is not really done yet).
+    /// 
+    /// # Compile Fail
+    ///
+    /// a Token cannot be used after it is done.
+    /// 
+    /// ```compile_fail
+    /// use cyclic_pipe::Builder;
+    /// use std::sync::mpsc;
+    /// 
+    /// let (p, _c) = Builder::new()
+    ///     .with_init_template("hello".to_string())
+    ///     .with_size(1)
+    ///     .build();
+    /// let token = p.get_write_token().unwrap();
+    /// token.buf = "world".to_string();
+    /// token.done();
+    /// println!("{}", token.buf); // This line should cause a compile-time error
+    /// ```
     pub fn done(self) {
         let _ = self.inner.sender.send(self.buf);
     }
@@ -46,6 +64,7 @@ where
 mod tests {
 
     use super::*;
+
 
     #[test]
     fn done_sends_value() {
@@ -70,21 +89,6 @@ mod tests {
         assert!(
             rx.recv().is_err(),
             "The channel has no senders left, so recv() will return an error."
-        );
-    }
-
-    #[test]
-    fn token_cannot_be_used_after_done() {
-        let (tx, rx) = mpsc::channel();
-        let token = Token::new("hello", tx);
-        token.done();
-        // Attempting to use token after done() should result in a compile-time error
-        // println!("{}", token.buf()); // Uncommenting this line should cause a compile-time error
-        assert_eq!(rx.recv().unwrap(), "hello");
-
-        assert!(
-            rx.recv().is_err(),
-            "The channel has no senders left, so recv() directly return an error."
         );
     }
 }
